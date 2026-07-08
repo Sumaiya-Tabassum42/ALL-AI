@@ -136,56 +136,66 @@ console.log('USER MESSAGE SAVED')
 console.log('CALLING N8N...')
 console.log('WEBHOOK URL:', webhookUrl)
 
-const n8nResponse = await fetch(webhookUrl, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    service,
-    conversation_id,
-    user_id,
-    prompt,
-  }),
-})
+let n8nResponse: Response
 
-    console.log('N8N STATUS:', n8nResponse.status)
+try {
+  n8nResponse = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      service,
+      conversation_id,
+      user_id,
+      prompt,
+    }),
+  })
+} catch (error) {
+  console.error('FETCH ERROR:', error)
 
-    let aiData: any = null
+  return NextResponse.json(
+    {
+      error: error instanceof Error ? error.message : 'Unable to reach n8n',
+    },
+    { status: 502 }
+  )
+}
 
-    try {
-      aiData = await n8nResponse.json()
-    } catch {
-      aiData = null
-    }
+console.log('N8N STATUS:', n8nResponse.status)
 
-    console.log('N8N RESPONSE:', aiData)
+const rawResponse = await n8nResponse.text()
+console.log('N8N RAW RESPONSE:', rawResponse)
 
-    if (!n8nResponse.ok) {
-      const errorMessage =
-        aiData?.error ||
-        aiData?.message ||
-        aiData?.detail ||
-        aiData?.response?.error ||
-        'n8n webhook request failed'
+let aiData: any = null
 
-      return NextResponse.json({ error: errorMessage }, { status: 502 })
-    }
+try {
+  aiData = JSON.parse(rawResponse)
+} catch {
+  aiData = rawResponse
+}
 
-    const responseText =
-      aiData?.response ||
-      aiData?.message ||
-      aiData?.output ||
-      aiData?.result ||
-      aiData?.data?.response ||
-      aiData?.data?.message
+console.log('N8N RESPONSE:', aiData)
 
-    if (!responseText && !aiData) {
-      return NextResponse.json(
-        { error: 'n8n webhook did not return a response' },
-        { status: 502 }
-      )
-    }
+if (!n8nResponse.ok) {
+  const errorMessage =
+    aiData?.error ||
+    aiData?.message ||
+    aiData?.detail ||
+    aiData?.response?.error ||
+    rawResponse ||
+    'n8n webhook request failed'
+
+  return NextResponse.json({ error: errorMessage }, { status: 502 })
+}
+
+const responseText =
+  aiData?.response ||
+  aiData?.message ||
+  aiData?.output ||
+  aiData?.result ||
+  aiData?.data?.response ||
+  aiData?.data?.message
 
     const newBalance = remainingTokens - MOCK_TOKEN_COST
 
