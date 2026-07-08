@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Shield,
+  Home,
 } from 'lucide-react'
 
 const menus = [
@@ -17,6 +18,13 @@ const menus = [
     href: '/admin',
     icon: LayoutDashboard,
   },
+
+    {
+    title: 'Main Dashboard',
+    href: '/dashboard',
+    icon: Home,
+  },
+
   {
     title: 'Users',
     href: '/admin/users',
@@ -77,7 +85,10 @@ export default function Sidebar() {
 
           const Icon = item.icon
 
-          const active = pathname === item.href
+          const active =
+  item.href === '/admin'
+    ? pathname.startsWith('/admin')
+    : pathname.startsWith(item.href)
 
           return (
             <Link
