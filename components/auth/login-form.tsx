@@ -65,7 +65,7 @@ console.log("SESSION AFTER LOGIN:", sessionResult)
   .single()
 
 if (profile?.is_admin) {
-  window.location.href = '/admin'
+  window.location.href = '/dashboard'
 } else {
   window.location.href = '/dashboard'
 }
