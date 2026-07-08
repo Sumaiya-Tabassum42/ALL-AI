@@ -13,17 +13,19 @@ import {
 } from 'lucide-react'
 
 const menus = [
+
+      {
+    title: 'Main Dashboard',
+    href: '/dashboard',
+    icon: Home,
+  },
   {
     title: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
   },
 
-    {
-    title: 'Main Dashboard',
-    href: '/dashboard',
-    icon: Home,
-  },
+
 
   {
     title: 'Users',
