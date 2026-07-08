@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
 import ChatLayout from "@/components/chat/chat-layout";
+import { Suspense } from "react";
 
 interface WorkspacePageProps {
   params: Promise<{
@@ -63,9 +64,11 @@ export default async function WorkspacePage({
   }
 
   return (
+  <Suspense fallback={<div>Loading...</div>}>
     <ChatLayout
       service={service}
       title={serviceNames[service] || "AI Workspace"}
     />
-  );
+  </Suspense>
+)
 }
