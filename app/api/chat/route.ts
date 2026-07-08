@@ -132,21 +132,22 @@ export async function POST(req: Request) {
       throw userMessageError
     }
 
-    console.log('USER MESSAGE SAVED')
-    console.log('CALLING N8N...')
+console.log('USER MESSAGE SAVED')
+console.log('CALLING N8N...')
+console.log('WEBHOOK URL:', webhookUrl)
 
-    const n8nResponse = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        service,
-        conversation_id,
-        user_id,
-        prompt,
-      }),
-    })
+const n8nResponse = await fetch(webhookUrl, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    service,
+    conversation_id,
+    user_id,
+    prompt,
+  }),
+})
 
     console.log('N8N STATUS:', n8nResponse.status)
 
