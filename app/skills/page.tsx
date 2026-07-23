@@ -1,7 +1,5 @@
-export default function Page() {
-  return (
-    <div className="flex h-full items-center justify-center text-3xl font-bold">
-      Skills
-    </div>
-  )
+import SkillsLayout from "@/components/skills/skills-layout";
+
+export default function SkillsPage() {
+  return <SkillsLayout />;
 }

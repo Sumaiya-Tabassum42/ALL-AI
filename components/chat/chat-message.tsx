@@ -18,9 +18,17 @@ export default function ChatMessage({
     parsed = null
   }
 
-  const isDocument = parsed?.type === 'document' && parsed?.url
-  const isImage = parsed?.type === 'image' && (Array.isArray(parsed?.urls) || typeof parsed?.url === 'string')
+  
+  const isDocument =
+  parsed?.type === "document" && parsed?.url
 
+const isPresentation =
+  parsed?.type === "presentation" && parsed?.url
+
+const isImage =
+  parsed?.type === "image" &&
+  (Array.isArray(parsed?.urls) ||
+    typeof parsed?.url === "string")
   return (
     <div
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
@@ -33,19 +41,49 @@ export default function ChatMessage({
       >
 
         {isDocument ? (
-          <div className="flex items-center gap-3">
-            <span>📄</span>
-            <span className="font-medium">{parsed.filename || 'document.docx'}</span>
-            <a
-              href={parsed.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`ml-3 underline ${isUser ? 'text-white/90' : 'text-sky-600'}`}
-            >
-              Download
-            </a>
-          </div>
-        ) : isImage ? (
+  <div className="flex items-center gap-3">
+    <span>📄</span>
+
+    <span className="font-medium">
+      {parsed.filename || "document.docx"}
+    </span>
+
+    <a
+      href={parsed.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`ml-3 underline ${
+        isUser ? "text-white/90" : "text-sky-600"
+      }`}
+    >
+      Download
+    </a>
+  </div>
+
+) : isPresentation ? (
+
+  <div className="flex items-center gap-3">
+
+    <span>📊</span>
+
+    <span className="font-medium">
+      {parsed.filename || "presentation.pptx"}
+    </span>
+
+    <a
+      href={parsed.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`ml-3 underline ${
+        isUser ? "text-white/90" : "text-sky-600"
+      }`}
+    >
+      Download Presentation
+    </a>
+
+  </div>
+
+) : isImage ? (
           <div className="flex flex-col gap-2">
             {(Array.isArray(parsed.urls) ? parsed.urls : [parsed.url]).map((u: string, idx: number) => (
               <a key={idx} href={u} target="_blank" rel="noopener noreferrer">

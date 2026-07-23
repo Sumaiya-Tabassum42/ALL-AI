@@ -19,6 +19,7 @@ const menus = [
     href: '/dashboard',
     icon: Home,
   },
+  
   {
     title: 'Dashboard',
     href: '/admin',

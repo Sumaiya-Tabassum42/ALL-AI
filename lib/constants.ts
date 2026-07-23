@@ -4,6 +4,7 @@ export const ALL_SERVICES = [
   'document',
   'design',
   'presentation',
+  "data_analysis",
   'more',
 ] as const
 

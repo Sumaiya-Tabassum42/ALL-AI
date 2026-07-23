@@ -3,22 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { generateDocument } from '@/lib/document-generator'
 import { ALL_SERVICES, DEFAULT_TOKEN_BALANCE } from '@/lib/constants'
 
+
 const MOCK_TOKEN_COST = 100
 
 function getWebhookUrl(service?: string) {
-  const normalizedService = (service || 'text').toLowerCase()
-
-  const webhookMap: Record<string, string | undefined> = {
-    text: process.env.N8N_TEXT_WEBHOOK_URL,
-    image: process.env.N8N_IMAGE_WEBHOOK_URL,
-    document: process.env.N8N_DOCUMENT_WEBHOOK_URL,
-    design: process.env.N8N_DESIGN_WEBHOOK_URL,
-    presentation: process.env.N8N_PRESENTATION_WEBHOOK_URL,
-    data_analysis: process.env.N8N_DATA_ANALYSIS_WEBHOOK_URL,
-    more: process.env.N8N_MORE_WEBHOOK_URL,
-  }
-
-  return webhookMap[normalizedService] || process.env.N8N_TEXT_WEBHOOK_URL
+  return process.env.N8N_TEXT_WEBHOOK_URL
 }
 
 export async function POST(req: Request) {
@@ -28,7 +17,13 @@ export async function POST(req: Request) {
     const body = await req.json()
     console.log('REQUEST BODY:', body)
 
-    const { service, conversation_id, user_id, prompt } = body
+    const {
+  service,
+  conversation_id,
+  user_id,
+  prompt,
+  dataset,
+} = body
 
     if (!user_id || !conversation_id || !prompt) {
       return NextResponse.json(
@@ -144,12 +139,13 @@ try {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      service,
-      conversation_id,
-      user_id,
-      prompt,
-    }),
+   body: JSON.stringify({
+  service,
+  conversation_id,
+  user_id,
+  prompt,
+  dataset,
+}),
   })
 } catch (error) {
   console.error('FETCH ERROR:', error)
@@ -266,25 +262,63 @@ const responseText =
 
 }
 
-    let downloadUrl: string | null = null
-    if (service === 'document') {
-      try {
-        downloadUrl = await generateDocument(responseText, prompt, user_id, conversation_id)
-        console.log('DOCUMENT GENERATED:', downloadUrl)
-      } catch (documentError) {
-        console.error('DOCUMENT GENERATION ERROR:', documentError)
-      }
-    }
+
+console.log("AI DATA:");
+console.dir(aiData, { depth: null });
+
+console.log("AI DATA PRESENTATION:");
+console.dir(aiData.presentation, { depth: null });
+
+let downloadUrl: string | null = null
+let editUrl: string | null = null
+
+if (service === 'presentation') {
+  downloadUrl = aiData?.download_url || null
+  editUrl = aiData?.edit_url || null
+}
+
+
+
+
+
+// Documents are generated locally
+if (service === 'document') {
+  try {
+    downloadUrl = await generateDocument(
+      responseText,
+      prompt,
+      user_id,
+      conversation_id
+    )
+
+    console.log('DOCUMENT GENERATED:', downloadUrl)
+  } catch (documentError) {
+    console.error('DOCUMENT GENERATION ERROR:', documentError)
+  }
+}
 
     // Build assistant content
     const assistantContent =
-      service === 'image' && imageUrls.length > 0
-        ? JSON.stringify({ type: 'image', urls: imageUrls })
-        : service === 'document' && downloadUrl
-        ? JSON.stringify({ type: 'document', url: downloadUrl, filename: `${prompt}.docx` })
-        : typeof responseText === 'string'
-        ? responseText
-        : JSON.stringify(responseText)
+  service === "image" && imageUrls.length > 0
+    ? JSON.stringify({
+        type: "image",
+        urls: imageUrls,
+      })
+    : service === "document" && downloadUrl
+    ? JSON.stringify({
+        type: "document",
+        url: downloadUrl,
+        filename: `${prompt}.docx`,
+      })
+    : service === "presentation" && downloadUrl
+    ? JSON.stringify({
+        type: "presentation",
+        url: downloadUrl,
+        filename: `${prompt}.pptx`,
+      })
+    : typeof responseText === "string"
+    ? responseText
+    : JSON.stringify(responseText);
 
     const { error: assistantMessageError } = await supabaseAdmin.from('messages').insert({
       conversation_id,
@@ -300,13 +334,18 @@ const responseText =
     console.log('ASSISTANT MESSAGE SAVED')
 
     // Return a response that includes image URLs or download URL when applicable
+    console.log("SERVICE:", service)
+console.log("AI DATA:", aiData)
+console.log("DOWNLOAD URL:", downloadUrl)
     return NextResponse.json({
-  response:
-    service === 'document'
-      ? 'Document generated successfully.'
-      : service === 'image'
-      ? 'Image generated successfully.'
-      : responseText,
+ response:
+  service === 'document'
+    ? 'Document generated successfully.'
+    : service === 'presentation'
+    ? 'Presentation generated successfully.'
+    : service === 'image'
+    ? 'Image generated successfully.'
+    : responseText,
 
   downloadUrl,
 

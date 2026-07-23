@@ -240,9 +240,17 @@ async function handleSubmit(e: React.FormEvent) {
                   onChange={() => toggleService(service)}
                 />
 
-                <span className="capitalize text-slate-700">
-                  {service}
-                </span>
+                <span className="text-slate-700">
+  {{
+    text: "Text Service",
+    image: "Image Service",
+    document: "Document Generation",
+    design: "Design Support",
+    presentation: "Presentation",
+    data_analysis: "Data Analysis",
+    more: "More Services",
+  }[service]}
+</span>
               </label>
             ))}
           </div>

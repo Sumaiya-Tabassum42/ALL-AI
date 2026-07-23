@@ -37,19 +37,7 @@ console.log("LOGIN ERROR:", error)
 const sessionResult = await supabase.auth.getSession()
 console.log("SESSION AFTER LOGIN:", sessionResult)
 
-    if (!error && data?.user) {
-      await fetch('/api/profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: data.user.id,
-          email: data.user.email,
-          full_name: data.user.user_metadata?.full_name,
-        }),
-      })
-    }
+
 
     setLoading(false)
 
