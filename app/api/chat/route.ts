@@ -299,99 +299,112 @@ export async function POST(req: Request) {
       }
     }
 
-    // Build assistant content
-    const assistantContent =
-      service === 'image' && imageUrls.length > 0
-        ? JSON.stringify({
-            type: 'image',
-            message: `🎨 Your image has been generated successfully!
+ const isDesignService = service === 'design' || aiData?.service === 'ui_design'
+const designHtml: string | null = isDesignService ? aiData?.html || null : null
+
+// Build assistant content
+const assistantContent =
+  service === 'image' && imageUrls.length > 0
+    ? JSON.stringify({
+        type: 'image',
+        message: `🎨 Your image has been generated successfully!
 
 I created an image based on your request:
 
 "${prompt}"
 
 You can preview the generated image below or download the full-resolution version.`,
-            urls: imageUrls,
-          })
-        : service === 'document' && downloadUrl
-        ? JSON.stringify({
-            type: 'document',
-            title: documentTitle,
-            message: `✅ Your document has been created successfully!
+        urls: imageUrls,
+      })
+    : service === 'document' && downloadUrl
+    ? JSON.stringify({
+        type: 'document',
+        title: documentTitle,
+        message: `✅ Your document has been created successfully!
 
 I prepared a well-structured document on "${documentTitle}" based on your request.
 
 The document has been professionally formatted and is ready for download. You can access it using the link below.`,
-            filename: `${documentTitle}.docx`,
-            url: downloadUrl,
-          })
-        : service === 'presentation' && downloadUrl
-        ? JSON.stringify({
-            type: 'presentation',
-            title: documentTitle,
-            message: `📊 Your presentation has been generated successfully!
+        filename: `${documentTitle}.docx`,
+        url: downloadUrl,
+      })
+    : service === 'presentation' && downloadUrl
+    ? JSON.stringify({
+        type: 'presentation',
+        title: documentTitle,
+        message: `📊 Your presentation has been generated successfully!
 
 Your presentation is ready. You can download it below.`,
-            filename: `${documentTitle}.pptx`,
-            url: downloadUrl,
-            editUrl,
-          })
-        : typeof responseText === 'string'
-        ? responseText
-        : JSON.stringify(responseText)
-
-    // SAVE ASSISTANT MESSAGE TO DATABASE
-    const { error: assistantMessageError } = await supabaseAdmin
-      .from('messages')
-      .insert({
-        conversation_id,
-        role: 'assistant',
-        content: assistantContent,
+        filename: `${documentTitle}.pptx`,
+        url: downloadUrl,
+        editUrl,
       })
+    : isDesignService && designHtml
+    ? JSON.stringify({
+        type: 'ui_design',
+        message: `🎨 Your UI design has been generated!
 
-    if (assistantMessageError) {
-      console.error('ASSISTANT MESSAGE SAVE ERROR:', assistantMessageError)
-      // Don't throw here - we want to still return the response even if saving fails
-      // But log it prominently
-      console.error('⚠️ Failed to save assistant message to database')
-    } else {
-      console.log('✅ ASSISTANT MESSAGE SAVED TO DATABASE')
-    }
+Here's the design based on:
 
-    // Return a response that includes image URLs or download URL when applicable
-    const payload =
-      service === "document"
-        ? {
-            type: "document",
-            message: "Document generated successfully.",
-            filename: downloadUrl
-              ? downloadUrl.split("/").pop()
-              : "document.docx",
-            url: downloadUrl,
-          }
-        : service === "presentation"
-        ? {
-            type: "presentation",
-            message: "Presentation generated successfully.",
-            filename: downloadUrl
-              ? downloadUrl.split("/").pop()
-              : "presentation.pptx",
-            url: downloadUrl,
-          }
-        : service === "image"
-        ? {
-            type: "image",
-            message: "Image generated successfully.",
-            urls: imageUrls,
-          }
-        : {
-            message: responseText,
-          }
+"${prompt}"`,
+        html: designHtml,
+      })
+    : typeof responseText === 'string'
+    ? responseText
+    : JSON.stringify(responseText)
 
-    return NextResponse.json({
-      response: payload,
-      remaining_tokens: newBalance,
-    })
+// SAVE ASSISTANT MESSAGE TO DATABASE
+const { error: assistantMessageError } = await supabaseAdmin
+  .from('messages')
+  .insert({
+    conversation_id,
+    role: 'assistant',
+    content: assistantContent,
+  })
+
+if (assistantMessageError) {
+  console.error('ASSISTANT MESSAGE SAVE ERROR:', assistantMessageError)
+  console.error('⚠️ Failed to save assistant message to database')
+} else {
+  console.log('✅ ASSISTANT MESSAGE SAVED TO DATABASE')
+}
+
+// Return a response that includes image URLs or download URL when applicable
+const payload =
+  service === "document"
+    ? {
+        type: "document",
+        message: "Document generated successfully.",
+        filename: downloadUrl ? downloadUrl.split("/").pop() : "document.docx",
+        url: downloadUrl,
+      }
+    : service === "presentation"
+    ? {
+        type: "presentation",
+        message: "Presentation generated successfully.",
+        filename: downloadUrl ? downloadUrl.split("/").pop() : "presentation.pptx",
+        url: downloadUrl,
+      }
+    : service === "image"
+    ? {
+        type: "image",
+        message: "Image generated successfully.",
+        urls: imageUrls,
+      }
+    : isDesignService
+    ? {
+        type: "ui_design",
+        message: "UI design generated successfully.",
+        html: designHtml,
+      }
+    : {
+        message: responseText,
+      }
+
+return NextResponse.json({
+  response: payload,
+  remaining_tokens: newBalance,
+})
   } catch (error) {
     console.error('CHAT API ERROR:', error)
     return NextResponse.json(

@@ -24,10 +24,16 @@ export default function ChatMessage({ role, message }: Props) {
     parsed?.type === "image" &&
     (Array.isArray(parsed?.urls) || typeof parsed?.url === "string");
 
+    const isUIDesign =
+  parsed?.type === "ui_design" &&
+  typeof parsed?.html === "string";
+
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-2xl rounded-2xl px-5 py-4 ${
+  className={`${
+    isUIDesign ? "max-w-6xl w-full" : "max-w-2xl"
+  } rounded-2xl px-5 py-4 ${
           isUser
             ? "bg-[#006A4E] text-white"
             : "bg-slate-100 text-slate-900"
@@ -102,6 +108,22 @@ export default function ChatMessage({ role, message }: Props) {
               </div>
             </div>
           </div>
+
+          ) : isUIDesign ? (
+  <div className="space-y-3 w-full">
+    {parsed.message && (
+      <MarkdownRenderer content={parsed.message} />
+    )}
+
+    <div className="rounded-lg border overflow-hidden bg-white">
+      <iframe
+        srcDoc={parsed.html}
+        title="UI Preview"
+        className="w-full h-[700px]"
+        sandbox="allow-scripts allow-forms"
+      />
+    </div>
+  </div>
         ) : isImage ? (
           <div className="space-y-4">
             {parsed.message && (
