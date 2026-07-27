@@ -15,12 +15,6 @@ import {
 
 const menus = [
   {
-    title: "Home Page",
-    href: "/dashboard",
-    icon: Home,
-  },
-
-  {
     title: "Admin Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
